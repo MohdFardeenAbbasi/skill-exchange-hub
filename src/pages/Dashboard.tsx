@@ -1,32 +1,114 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
+import { VideoUpload } from "@/components/VideoUpload";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   LayoutDashboard, BookOpen, Award, Coins, Clock, TrendingUp, 
-  Calendar, Star, ArrowRight, Download, MessageCircle 
+  Calendar, ArrowRight, Download, MessageCircle, Video 
 } from "lucide-react";
 
-const stats = [
-  { icon: Coins, label: "Points Balance", value: "2,450", change: "+120 this week", color: "text-primary" },
-  { icon: BookOpen, label: "Skills Learned", value: "12", change: "3 in progress", color: "text-category-code" },
-  { icon: Award, label: "Skills Taught", value: "8", change: "28 students", color: "text-accent" },
-  { icon: Clock, label: "Total Hours", value: "47", change: "+5 this month", color: "text-category-music" },
-];
+interface Profile {
+  full_name: string | null;
+  points_balance: number;
+  total_hours_taught: number;
+  total_hours_learned: number;
+}
 
-const recentActivity = [
-  { type: "earned", title: "Completed React Tutorial", points: 50, time: "2 hours ago", instructor: "Alex Chen" },
-  { type: "spent", title: "Booked Piano Lesson", points: -100, time: "Yesterday", instructor: "Emily Rose" },
-  { type: "earned", title: "Taught UI Design Basics", points: 150, time: "2 days ago", instructor: "You" },
-  { type: "earned", title: "Completed Marketing Course", points: 75, time: "3 days ago", instructor: "James Wilson" },
-];
-
-const upcomingSessions = [
-  { title: "Advanced TypeScript", instructor: "David Kim", date: "Today, 3:00 PM", points: 200 },
-  { title: "Guitar Masterclass", instructor: "Emily Rose", date: "Tomorrow, 5:00 PM", points: 150 },
-];
+interface UserVideo {
+  id: string;
+  title: string;
+  created_at: string;
+  file_size: number | null;
+}
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [videos, setVideos] = useState<UserVideo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, points_balance, total_hours_taught, total_hours_learned")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (profileData) {
+        setProfile(profileData);
+      }
+
+      // Fetch user's videos
+      const { data: videosData } = await supabase
+        .from("videos")
+        .select("id, title, created_at, file_size")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (videosData) {
+        setVideos(videosData);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [user]);
+
+  const stats = [
+    { 
+      icon: Coins, 
+      label: "Points Balance", 
+      value: profile?.points_balance?.toLocaleString() || "0", 
+      change: "+0 this week", 
+      color: "text-primary" 
+    },
+    { 
+      icon: BookOpen, 
+      label: "Skills Learned", 
+      value: Math.floor(profile?.total_hours_learned || 0).toString(), 
+      change: "hours total", 
+      color: "text-category-code" 
+    },
+    { 
+      icon: Award, 
+      label: "Skills Taught", 
+      value: Math.floor(profile?.total_hours_taught || 0).toString(), 
+      change: "hours total", 
+      color: "text-accent" 
+    },
+    { 
+      icon: Video, 
+      label: "Videos Uploaded", 
+      value: videos.length.toString(), 
+      change: "tutorials", 
+      color: "text-category-music" 
+    },
+  ];
+
+  const displayName = profile?.full_name || user?.email?.split("@")[0] || "User";
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -39,7 +121,7 @@ const Dashboard = () => {
               <span>Dashboard</span>
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
-              Welcome back, <span className="gradient-text">John!</span>
+              Welcome back, <span className="gradient-text">{displayName}!</span>
             </h1>
             <p className="text-muted-foreground mt-2">Here's what's happening with your skills today.</p>
           </div>
@@ -65,53 +147,43 @@ const Dashboard = () => {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Recent Activity */}
-            <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-foreground">Recent Activity</h2>
-                <Button variant="ghost" size="sm">View All</Button>
-              </div>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activity.type === 'earned' ? 'bg-green-500/10 text-green-500' : 'bg-accent/10 text-accent'}`}>
-                        {activity.type === 'earned' ? '+' : '-'}
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">{activity.title}</p>
-                        <p className="text-sm text-muted-foreground">{activity.instructor} • {activity.time}</p>
-                      </div>
-                    </div>
-                    <div className={`font-semibold ${activity.type === 'earned' ? 'text-green-500' : 'text-accent'}`}>
-                      {activity.points > 0 ? '+' : ''}{activity.points} pts
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Video Upload */}
+            <div className="lg:col-span-2">
+              <VideoUpload onUploadComplete={fetchData} />
             </div>
 
-            {/* Upcoming Sessions */}
+            {/* Your Videos */}
             <div className="rounded-2xl border border-border bg-card p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-foreground">Upcoming</h2>
-                <Calendar className="w-5 h-5 text-muted-foreground" />
+                <h2 className="text-xl font-semibold text-foreground">Your Videos</h2>
+                <Video className="w-5 h-5 text-muted-foreground" />
               </div>
               <div className="space-y-4">
-                {upcomingSessions.map((session, index) => (
-                  <div key={index} className="p-4 rounded-xl border border-border hover:border-primary/50 transition-colors duration-300">
-                    <h3 className="font-medium text-foreground mb-1">{session.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">{session.instructor}</p>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-primary">{session.date}</span>
-                      <span className="font-semibold text-foreground">{session.points} pts</span>
+                {videos.length > 0 ? (
+                  videos.map((video) => (
+                    <div key={video.id} className="p-4 rounded-xl border border-border hover:border-primary/50 transition-colors duration-300">
+                      <h3 className="font-medium text-foreground mb-1 truncate">{video.title}</h3>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          {new Date(video.created_at).toLocaleDateString()}
+                        </span>
+                        {video.file_size && (
+                          <span className="text-primary">
+                            {(video.file_size / 1024 / 1024).toFixed(1)} MB
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    No videos uploaded yet
+                  </p>
+                )}
               </div>
               <Button variant="outline" className="w-full mt-4" asChild>
                 <Link to="/skills">
-                  Browse More Skills
+                  Browse Skills
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </Button>
