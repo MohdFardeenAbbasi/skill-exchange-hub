@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Upload, Video, X, CheckCircle } from "lucide-react";
+import { VIDEO_CATEGORIES, VideoCategory } from "@/lib/videoCategories";
 
 const ALLOWED_FORMATS = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"];
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -23,6 +25,7 @@ export function VideoUpload({ onUploadComplete }: VideoUploadProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState<VideoCategory>("education");
   const [uploadComplete, setUploadComplete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,6 +91,7 @@ export function VideoUpload({ onUploadComplete }: VideoUploadProps) {
         file_path: uploadData.path,
         file_size: selectedFile.size,
         format: selectedFile.type,
+        category: category,
       });
 
       if (dbError) throw dbError;
@@ -101,6 +105,7 @@ export function VideoUpload({ onUploadComplete }: VideoUploadProps) {
         setSelectedFile(null);
         setTitle("");
         setDescription("");
+        setCategory("education");
         setProgress(0);
         setUploadComplete(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -119,6 +124,7 @@ export function VideoUpload({ onUploadComplete }: VideoUploadProps) {
     setSelectedFile(null);
     setTitle("");
     setDescription("");
+    setCategory("education");
     setProgress(0);
     setUploadComplete(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -199,7 +205,7 @@ export function VideoUpload({ onUploadComplete }: VideoUploadProps) {
           </div>
         )}
 
-        {/* Title & Description */}
+        {/* Title, Category & Description */}
         {selectedFile && (
           <>
             <div className="space-y-2">
@@ -211,6 +217,26 @@ export function VideoUpload({ onUploadComplete }: VideoUploadProps) {
                 placeholder="Give your video a title"
                 disabled={uploading}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="video-category">Category *</Label>
+              <Select
+                value={category}
+                onValueChange={(value) => setCategory(value as VideoCategory)}
+                disabled={uploading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {VIDEO_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.icon} {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

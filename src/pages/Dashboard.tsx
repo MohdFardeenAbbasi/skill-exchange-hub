@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { VideoUpload } from "@/components/VideoUpload";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { VIDEO_CATEGORIES, VideoCategory } from "@/lib/videoCategories";
+import { Badge } from "@/components/ui/badge";
 import { 
   LayoutDashboard, BookOpen, Award, Coins, Clock, TrendingUp, 
-  Calendar, ArrowRight, Download, MessageCircle, Video 
+  Calendar, ArrowRight, Download, MessageCircle, Video, Play
 } from "lucide-react";
 
 interface Profile {
@@ -23,6 +25,8 @@ interface UserVideo {
   title: string;
   created_at: string;
   file_size: number | null;
+  category: VideoCategory;
+  total_points_earned: number;
 }
 
 const Dashboard = () => {
@@ -49,7 +53,7 @@ const Dashboard = () => {
       // Fetch user's videos
       const { data: videosData } = await supabase
         .from("videos")
-        .select("id, title, created_at, file_size")
+        .select("id, title, created_at, file_size, category, total_points_earned")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -160,21 +164,28 @@ const Dashboard = () => {
               </div>
               <div className="space-y-4">
                 {videos.length > 0 ? (
-                  videos.map((video) => (
-                    <div key={video.id} className="p-4 rounded-xl border border-border hover:border-primary/50 transition-colors duration-300">
-                      <h3 className="font-medium text-foreground mb-1 truncate">{video.title}</h3>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">
-                          {new Date(video.created_at).toLocaleDateString()}
-                        </span>
-                        {video.file_size && (
-                          <span className="text-primary">
-                            {(video.file_size / 1024 / 1024).toFixed(1)} MB
+                  videos.map((video) => {
+                    const categoryInfo = VIDEO_CATEGORIES.find(c => c.value === video.category);
+                    return (
+                      <div key={video.id} className="p-4 rounded-xl border border-border hover:border-primary/50 transition-colors duration-300">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-medium text-foreground truncate flex-1">{video.title}</h3>
+                          <Badge variant="secondary" className="ml-2 text-xs">
+                            {categoryInfo?.icon} {categoryInfo?.label}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {new Date(video.created_at).toLocaleDateString()}
                           </span>
-                        )}
+                          <span className="text-primary flex items-center gap-1">
+                            <Coins className="w-3 h-3" />
+                            {video.total_points_earned} earned
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <p className="text-muted-foreground text-center py-4">
                     No videos uploaded yet
@@ -182,9 +193,10 @@ const Dashboard = () => {
                 )}
               </div>
               <Button variant="outline" className="w-full mt-4" asChild>
-                <Link to="/skills">
-                  Browse Skills
-                  <ArrowRight className="w-4 h-4" />
+                <Link to="/videos">
+                  <Play className="w-4 h-4 mr-2" />
+                  Browse All Videos
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
             </div>

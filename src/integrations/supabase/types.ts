@@ -74,8 +74,44 @@ export type Database = {
         }
         Relationships: []
       }
+      video_watches: {
+        Row: {
+          created_at: string
+          id: string
+          points_transferred: number
+          video_id: string
+          watched_at: string
+          watcher_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points_transferred: number
+          video_id: string
+          watched_at?: string
+          watcher_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points_transferred?: number
+          video_id?: string
+          watched_at?: string
+          watcher_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_watches_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       videos: {
         Row: {
+          category: Database["public"]["Enums"]["video_category"]
           created_at: string
           description: string | null
           download_count: number | null
@@ -86,10 +122,12 @@ export type Database = {
           id: string
           is_downloadable: boolean | null
           title: string
+          total_points_earned: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          category?: Database["public"]["Enums"]["video_category"]
           created_at?: string
           description?: string | null
           download_count?: number | null
@@ -100,10 +138,12 @@ export type Database = {
           id?: string
           is_downloadable?: boolean | null
           title: string
+          total_points_earned?: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          category?: Database["public"]["Enums"]["video_category"]
           created_at?: string
           description?: string | null
           download_count?: number | null
@@ -114,6 +154,7 @@ export type Database = {
           id?: string
           is_downloadable?: boolean | null
           title?: string
+          total_points_earned?: number
           updated_at?: string
           user_id?: string
         }
@@ -131,9 +172,27 @@ export type Database = {
         }
         Returns: boolean
       }
+      watch_video_and_transfer_points: {
+        Args: {
+          p_points_to_transfer?: number
+          p_video_id: string
+          p_watcher_user_id: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      video_category:
+        | "education"
+        | "entertainment"
+        | "sports"
+        | "technology"
+        | "music"
+        | "gaming"
+        | "lifestyle"
+        | "news"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -262,6 +321,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      video_category: [
+        "education",
+        "entertainment",
+        "sports",
+        "technology",
+        "music",
+        "gaming",
+        "lifestyle",
+        "news",
+        "other",
+      ],
     },
   },
 } as const

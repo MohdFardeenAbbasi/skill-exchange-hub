@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu, X, Sparkles, Wallet, LayoutDashboard, BookOpen, MessageCircle } from "lucide-react";
+import { Menu, X, Sparkles, Wallet, LayoutDashboard, BookOpen, MessageCircle, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/skills", label: "Browse Skills", icon: BookOpen },
+  { href: "/videos", label: "Videos", icon: Video },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/wallet", label: "Wallet", icon: Wallet },
   { href: "/support", label: "Support", icon: MessageCircle },
