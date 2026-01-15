@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Skills from "./pages/Skills";
 import SkillDetail from "./pages/SkillDetail";
 import Dashboard from "./pages/Dashboard";
+import Videos from "./pages/Videos";
 import Wallet from "./pages/Wallet";
 import Support from "./pages/Support";
 import Login from "./pages/Login";
@@ -40,6 +41,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route path="/videos" element={<Videos />} />
               <Route
                 path="/wallet"
                 element={
