@@ -5,23 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Coins, Wallet as WalletIcon, TrendingUp, ArrowUpRight, ArrowDownLeft,
-  CreditCard, DollarSign, Clock, CheckCircle, AlertCircle
+  CreditCard, DollarSign, Clock, CheckCircle, AlertCircle, IndianRupee
 } from "lucide-react";
-
-const transactions = [
-  { id: 1, type: "earned", description: "Taught React Fundamentals", points: 200, date: "Jan 12, 2026", status: "completed" },
-  { id: 2, type: "spent", description: "Learned Guitar Basics", points: -100, date: "Jan 11, 2026", status: "completed" },
-  { id: 3, type: "earned", description: "Taught UI Design", points: 150, date: "Jan 10, 2026", status: "completed" },
-  { id: 4, type: "withdrawal", description: "Withdrawal to Bank", points: -500, date: "Jan 8, 2026", status: "pending" },
-  { id: 5, type: "earned", description: "Taught Python Basics", points: 175, date: "Jan 5, 2026", status: "completed" },
-];
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 const Wallet = () => {
+  const { user } = useAuth();
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const totalPoints = 2450;
-  const pendingPoints = 500;
-  const availablePoints = totalPoints - pendingPoints;
-  const conversionRate = 0.10; // $0.10 per point
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: paymentRequests } = useQuery({
+    queryKey: ["payment-requests-wallet", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("payment_requests")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const totalPoints = profile?.points_balance || 0;
+  const pendingRequests = paymentRequests?.filter(r => r.status === "pending") || [];
+  const pendingPoints = pendingRequests.reduce((sum, r) => sum + r.points, 0);
+  const conversionRate = 0.10;
 
   return (
     <div className="min-h-screen">

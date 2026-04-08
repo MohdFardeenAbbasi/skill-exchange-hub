@@ -16,6 +16,9 @@ import Support from "./pages/Support";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
+import BuyPoints from "./pages/BuyPoints";
+import AdminPayments from "./pages/AdminPayments";
+import AiHelpAssistant from "./components/AiHelpAssistant";
 
 const queryClient = new QueryClient();
 
@@ -50,10 +53,27 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/buy-points"
+                element={
+                  <ProtectedRoute>
+                    <BuyPoints />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/payments"
+                element={
+                  <ProtectedRoute>
+                    <AdminPayments />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/support" element={<Support />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <AiHelpAssistant />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
