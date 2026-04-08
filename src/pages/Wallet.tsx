@@ -78,7 +78,7 @@ const Wallet = () => {
                 <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
               <p className="text-sm text-muted-foreground mb-1">Available</p>
-              <p className="text-3xl font-bold text-foreground">{availablePoints.toLocaleString()}</p>
+              <p className="text-3xl font-bold text-foreground">{totalPoints.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground mt-2">Ready to withdraw</p>
             </div>
 
