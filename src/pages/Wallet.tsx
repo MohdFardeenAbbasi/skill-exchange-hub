@@ -5,23 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Coins, Wallet as WalletIcon, TrendingUp, ArrowUpRight, ArrowDownLeft,
-  CreditCard, DollarSign, Clock, CheckCircle, AlertCircle
+  CreditCard, DollarSign, Clock, CheckCircle, AlertCircle, IndianRupee
 } from "lucide-react";
-
-const transactions = [
-  { id: 1, type: "earned", description: "Taught React Fundamentals", points: 200, date: "Jan 12, 2026", status: "completed" },
-  { id: 2, type: "spent", description: "Learned Guitar Basics", points: -100, date: "Jan 11, 2026", status: "completed" },
-  { id: 3, type: "earned", description: "Taught UI Design", points: 150, date: "Jan 10, 2026", status: "completed" },
-  { id: 4, type: "withdrawal", description: "Withdrawal to Bank", points: -500, date: "Jan 8, 2026", status: "pending" },
-  { id: 5, type: "earned", description: "Taught Python Basics", points: 175, date: "Jan 5, 2026", status: "completed" },
-];
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 const Wallet = () => {
+  const { user } = useAuth();
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const totalPoints = 2450;
-  const pendingPoints = 500;
-  const availablePoints = totalPoints - pendingPoints;
-  const conversionRate = 0.10; // $0.10 per point
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("*").eq("user_id", user!.id).single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: paymentRequests } = useQuery({
+    queryKey: ["payment-requests-wallet", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("payment_requests")
+        .select("*")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const totalPoints = profile?.points_balance || 0;
+  const pendingRequests = paymentRequests?.filter(r => r.status === "pending") || [];
+  const pendingPoints = pendingRequests.reduce((sum, r) => sum + r.points, 0);
+  const conversionRate = 0.10;
 
   return (
     <div className="min-h-screen">
@@ -57,7 +78,7 @@ const Wallet = () => {
                 <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
               <p className="text-sm text-muted-foreground mb-1">Available</p>
-              <p className="text-3xl font-bold text-foreground">{availablePoints.toLocaleString()}</p>
+              <p className="text-3xl font-bold text-foreground">{totalPoints.toLocaleString()}</p>
               <p className="text-sm text-muted-foreground mt-2">Ready to withdraw</p>
             </div>
 
@@ -72,82 +93,69 @@ const Wallet = () => {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Transaction History */}
+            {/* Payment Requests History */}
             <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold text-foreground mb-6">Transaction History</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Payment History</h2>
               <div className="space-y-3">
-                {transactions.map((tx) => (
-                  <div key={tx.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors duration-300">
+                {paymentRequests && paymentRequests.length > 0 ? paymentRequests.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors duration-300">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        tx.type === 'earned' ? 'bg-green-500/10' : 
-                        tx.type === 'withdrawal' ? 'bg-yellow-500/10' : 'bg-accent/10'
+                        req.status === 'approved' ? 'bg-green-500/10' : 
+                        req.status === 'rejected' ? 'bg-destructive/10' : 'bg-yellow-500/10'
                       }`}>
-                        {tx.type === 'earned' ? (
-                          <ArrowDownLeft className="w-5 h-5 text-green-500" />
-                        ) : tx.type === 'withdrawal' ? (
-                          <DollarSign className="w-5 h-5 text-yellow-500" />
+                        {req.status === 'approved' ? (
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        ) : req.status === 'rejected' ? (
+                          <AlertCircle className="w-5 h-5 text-destructive" />
                         ) : (
-                          <ArrowUpRight className="w-5 h-5 text-accent" />
+                          <Clock className="w-5 h-5 text-yellow-500" />
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">{tx.description}</p>
+                        <p className="font-medium text-foreground">₹{req.amount} → {req.points} pts</p>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{tx.date}</span>
-                          {tx.status === 'pending' && (
-                            <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-600 text-xs">Pending</span>
-                          )}
+                          <span>UTR: {req.transaction_id}</span>
+                          <span>•</span>
+                          <span>{new Date(req.created_at).toLocaleDateString()}</span>
                         </div>
+                        {req.admin_notes && <p className="text-xs text-destructive mt-1">{req.admin_notes}</p>}
                       </div>
                     </div>
-                    <div className={`font-semibold ${tx.points > 0 ? 'text-green-500' : 'text-foreground'}`}>
-                      {tx.points > 0 ? '+' : ''}{tx.points} pts
-                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                      req.status === 'approved' ? 'bg-green-500/10 text-green-600' :
+                      req.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                      'bg-yellow-500/10 text-yellow-600'
+                    }`}>
+                      {req.status}
+                    </span>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-muted-foreground text-center py-8">No payment history yet</p>
+                )}
               </div>
             </div>
 
-            {/* Withdraw Section */}
+            {/* Buy Points Section */}
             <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold text-foreground mb-6">Withdraw Funds</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-6">Buy Points</h2>
               
               <div className="p-4 rounded-xl bg-muted/50 mb-6">
                 <p className="text-sm text-muted-foreground mb-1">Conversion Rate</p>
-                <p className="text-lg font-semibold text-foreground">1 Point = $0.10 USD</p>
-                <p className="text-xs text-muted-foreground mt-1">Minimum withdrawal: 1,000 points</p>
+                <p className="text-lg font-semibold text-foreground">₹1 = 1 Point</p>
+                <p className="text-xs text-muted-foreground mt-1">Pay via UPI and get points instantly after approval</p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Points to Withdraw</label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      placeholder="Enter points"
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      className="h-12 pr-16"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">pts</span>
-                  </div>
-                  {withdrawAmount && (
-                    <p className="text-sm text-primary mt-2">
-                      You'll receive: ${(Number(withdrawAmount) * conversionRate).toFixed(2)} USD
-                    </p>
-                  )}
-                </div>
-
-                <Button variant="hero" className="w-full" disabled={!withdrawAmount || Number(withdrawAmount) < 1000}>
-                  <CreditCard className="w-4 h-4" />
-                  Request Withdrawal
+              <Link to="/buy-points">
+                <Button variant="hero" className="w-full">
+                  <IndianRupee className="w-4 h-4" />
+                  Buy Points via UPI
                 </Button>
+              </Link>
 
-                <p className="text-xs text-center text-muted-foreground">
-                  Withdrawals are processed within 3-5 business days
-                </p>
-              </div>
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                Scan QR, pay, and submit transaction ID for verification
+              </p>
             </div>
           </div>
         </div>

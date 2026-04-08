@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      payment_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          id: string
+          points: number
+          status: Database["public"]["Enums"]["payment_status"]
+          transaction_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          points: number
+          status?: Database["public"]["Enums"]["payment_status"]
+          transaction_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          points?: number
+          status?: Database["public"]["Enums"]["payment_status"]
+          transaction_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -165,12 +201,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_payment: { Args: { p_payment_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      reject_payment: {
+        Args: { p_payment_id: string; p_reason?: string }
+        Returns: Json
       }
       watch_video_and_transfer_points: {
         Args: {
@@ -183,6 +224,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      payment_status: "pending" | "approved" | "rejected"
       video_category:
         | "education"
         | "entertainment"
@@ -321,6 +363,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      payment_status: ["pending", "approved", "rejected"],
       video_category: [
         "education",
         "entertainment",
