@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu, X, Sparkles, Wallet, LayoutDashboard, BookOpen, MessageCircle, Video } from "lucide-react";
+import { Menu, X, Sparkles, Wallet, LayoutDashboard, BookOpen, MessageCircle, Video, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const navLinks = [
   { href: "/skills", label: "Browse Skills", icon: BookOpen },
@@ -16,6 +19,24 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user!.id,
+        _role: "admin",
+      });
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const allLinks = [
+    ...navLinks,
+    ...(isAdmin ? [{ href: "/admin/payments", label: "Admin", icon: ShieldCheck }] : []),
+  ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass">
