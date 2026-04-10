@@ -54,7 +54,7 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => {
+            {allLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.href;
               return (
@@ -80,12 +80,20 @@ export function Navbar() {
             <ThemeToggle />
             
             <div className="hidden sm:flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-              <Button variant="hero" size="sm" asChild>
-                <Link to="/signup">Get Started</Link>
-              </Button>
+              {user ? (
+                <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                  Sign Out
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                  <Button variant="hero" size="sm" asChild>
+                    <Link to="/signup">Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -108,7 +116,7 @@ export function Navbar() {
           )}
         >
           <div className="flex flex-col gap-1 pt-2">
-            {navLinks.map((link) => {
+            {allLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.href;
               return (
@@ -129,12 +137,20 @@ export function Navbar() {
               );
             })}
             <div className="flex gap-2 mt-3 px-4">
-              <Button variant="outline" size="sm" className="flex-1" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-              <Button variant="hero" size="sm" className="flex-1" asChild>
-                <Link to="/signup">Get Started</Link>
-              </Button>
+              {user ? (
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => signOut()}>
+                  Sign Out
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                  <Button variant="hero" size="sm" className="flex-1" asChild>
+                    <Link to="/signup">Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
