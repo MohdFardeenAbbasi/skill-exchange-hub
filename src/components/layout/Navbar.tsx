@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Menu, X, Sparkles, Wallet, LayoutDashboard, BookOpen, MessageCircle, Video } from "lucide-react";
+import { Menu, X, Sparkles, Wallet, LayoutDashboard, BookOpen, MessageCircle, Video, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const navLinks = [
   { href: "/skills", label: "Browse Skills", icon: BookOpen },
@@ -16,6 +19,24 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user!.id,
+        _role: "admin",
+      });
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const allLinks = [
+    ...navLinks,
+    ...(isAdmin ? [{ href: "/admin/payments", label: "Admin", icon: ShieldCheck }] : []),
+  ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass">
@@ -33,7 +54,7 @@ export function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link) => {
+            {allLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.href;
               return (
@@ -59,12 +80,20 @@ export function Navbar() {
             <ThemeToggle />
             
             <div className="hidden sm:flex items-center gap-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-              <Button variant="hero" size="sm" asChild>
-                <Link to="/signup">Get Started</Link>
-              </Button>
+              {user ? (
+                <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                  Sign Out
+                </Button>
+              ) : (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                  <Button variant="hero" size="sm" asChild>
+                    <Link to="/signup">Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -87,7 +116,7 @@ export function Navbar() {
           )}
         >
           <div className="flex flex-col gap-1 pt-2">
-            {navLinks.map((link) => {
+            {allLinks.map((link) => {
               const Icon = link.icon;
               const isActive = location.pathname === link.href;
               return (
@@ -108,12 +137,20 @@ export function Navbar() {
               );
             })}
             <div className="flex gap-2 mt-3 px-4">
-              <Button variant="outline" size="sm" className="flex-1" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-              <Button variant="hero" size="sm" className="flex-1" asChild>
-                <Link to="/signup">Get Started</Link>
-              </Button>
+              {user ? (
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => signOut()}>
+                  Sign Out
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Link to="/login">Sign In</Link>
+                  </Button>
+                  <Button variant="hero" size="sm" className="flex-1" asChild>
+                    <Link to="/signup">Get Started</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

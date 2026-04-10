@@ -29,20 +29,28 @@ const AdminPayments = () => {
   const { data: requests, refetch } = useQuery({
     queryKey: ["admin-payment-requests"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch payment requests
+      const { data: payments, error } = await supabase
         .from("payment_requests")
-        .select("*, profiles!payment_requests_user_id_fkey(full_name, email)")
+        .select("*")
         .order("created_at", { ascending: false });
-      if (error) {
-        // If join fails, fetch without join
-        const { data: basic, error: err2 } = await supabase
-          .from("payment_requests")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (err2) throw err2;
-        return basic;
-      }
-      return data;
+      if (error) throw error;
+
+      // Fetch profiles for all unique user_ids
+      const userIds = [...new Set(payments.map((p) => p.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email")
+        .in("user_id", userIds);
+
+      const profileMap = new Map(
+        (profiles || []).map((p) => [p.user_id, p])
+      );
+
+      return payments.map((p) => ({
+        ...p,
+        profile: profileMap.get(p.user_id) || null,
+      }));
     },
     enabled: !!user && isAdmin === true,
   });
@@ -157,7 +165,9 @@ const AdminPayments = () => {
                       <div>
                         <p className="font-semibold text-foreground">₹{req.amount} → {req.points} Points</p>
                         <p className="text-sm text-muted-foreground">UTR: <span className="font-mono text-foreground">{req.transaction_id}</span></p>
-                        <p className="text-xs text-muted-foreground">User: {req.user_id.slice(0, 8)}... • {new Date(req.created_at).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {req.profile?.full_name || req.profile?.email || req.user_id.slice(0, 8) + "..."} • {new Date(req.created_at).toLocaleString()}
+                        </p>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                         <Input
