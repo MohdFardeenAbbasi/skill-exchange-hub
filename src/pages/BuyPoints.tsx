@@ -112,6 +112,10 @@ const BuyPoints = () => {
                 <p className="text-lg font-bold text-foreground">₹1 = 1 Point</p>
                 <p className="text-xs text-muted-foreground">Min: ₹10 | Max: ₹10,000</p>
               </div>
+              <p className="text-sm text-muted-foreground text-center mt-4 leading-relaxed">
+                You can make the payment directly to <strong>Mohd Fardeen's</strong> registered phone number.
+                After completing the payment, please enter the <strong>UTR (Transaction Reference Number)</strong> in the UTR field for verification.
+              </p>
             </div>
 
             {/* Payment Form */}
