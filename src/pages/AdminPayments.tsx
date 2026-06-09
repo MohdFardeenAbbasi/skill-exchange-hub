@@ -40,11 +40,19 @@ const AdminPayments = () => {
       const userIds = [...new Set(payments.map((p) => p.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, email")
+        .select("user_id, full_name")
         .in("user_id", userIds);
 
+      // Email is column-protected; fetch per user via secured RPC (admin or self only)
+      const profilesWithEmail = await Promise.all(
+        (profiles || []).map(async (p) => {
+          const { data: email } = await supabase.rpc("get_user_email", { _user_id: p.user_id });
+          return { ...p, email: email as string | null };
+        })
+      );
+
       const profileMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p])
+        profilesWithEmail.map((p) => [p.user_id, p])
       );
 
       return payments.map((p) => ({
