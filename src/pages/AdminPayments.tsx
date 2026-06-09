@@ -52,7 +52,7 @@ const AdminPayments = () => {
       );
 
       const profileMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p])
+        profilesWithEmail.map((p) => [p.user_id, p])
       );
 
       return payments.map((p) => ({
