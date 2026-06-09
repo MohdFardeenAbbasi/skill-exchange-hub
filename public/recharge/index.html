@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skill Exchanger — Wallet Recharge</title>
+<link rel="stylesheet" href="style.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="/" class="brand">
+        <span class="brand-mark">SX</span>
+        <span class="brand-text">Skill<span class="gold">Exchanger</span></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/skills">Skills</a></li>
+        <li><a href="/videos">Videos</a></li>
+        <li><a href="#" class="active">Wallet</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="page-header">
+      <p class="eyebrow">Premium Wallet</p>
+      <h1>Recharge Your <span class="gold">Wallet</span></h1>
+      <p class="sub">Top up instantly via UPI and start exchanging skills.</p>
+    </header>
+
+    <!-- Balance Card -->
+    <section class="glass balance-card">
+      <div>
+        <p class="label">Current Balance</p>
+        <h2 class="balance"><span id="walletBalance">0</span> <small>pts</small></h2>
+        <p class="hint">1 Point ≈ ₹1 utility on the platform</p>
+      </div>
+      <div class="balance-icon">₹</div>
+    </section>
+
+    <!-- Plans -->
+    <section class="plans">
+      <h3 class="section-title">Choose a Plan</h3>
+      <div class="plan-grid">
+        <article class="glass plan-card" data-amount="99" data-points="100">
+          <div class="plan-tag">Starter</div>
+          <h4>₹99</h4>
+          <p class="points">100 Points</p>
+          <ul>
+            <li>Instant top-up</li>
+            <li>UPI verified</li>
+          </ul>
+          <button class="btn-recharge" data-amount="99" data-points="100">Recharge ₹99</button>
+        </article>
+
+        <article class="glass plan-card featured" data-amount="199" data-points="250">
+          <div class="plan-tag">Popular</div>
+          <h4>₹199</h4>
+          <p class="points">250 Points</p>
+          <ul>
+            <li>Best value</li>
+            <li>+25% bonus pts</li>
+          </ul>
+          <button class="btn-recharge" data-amount="199" data-points="250">Recharge ₹199</button>
+        </article>
+
+        <article class="glass plan-card" data-amount="499" data-points="700">
+          <div class="plan-tag">Pro</div>
+          <h4>₹499</h4>
+          <p class="points">700 Points</p>
+          <ul>
+            <li>Maximum savings</li>
+            <li>+40% bonus pts</li>
+          </ul>
+          <button class="btn-recharge" data-amount="499" data-points="700">Recharge ₹499</button>
+        </article>
+      </div>
+    </section>
+
+    <!-- Instructions -->
+    <section class="glass instructions">
+      <h3>How it works</h3>
+      <ol>
+        <li>Select a recharge plan above.</li>
+        <li>On mobile, your UPI app opens automatically. On desktop, scan the QR shown.</li>
+        <li>After payment, enter your <strong>UTR number</strong> to verify and receive points instantly.</li>
+      </ol>
+    </section>
+
+    <!-- Transaction History -->
+    <section class="history">
+      <h3 class="section-title">Transaction History</h3>
+      <div class="glass">
+        <table id="historyTable">
+          <thead>
+            <tr><th>Date / Time</th><th>Amount</th><th>Points</th><th>UTR</th><th>Status</th></tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr class="empty"><td colspan="5">No transactions yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Payment Modal -->
+  <div class="modal-backdrop" id="paymentModal">
+    <div class="modal glass">
+      <button class="close-btn" data-close>&times;</button>
+      <h3>Pay <span class="gold" id="payAmount">₹0</span></h3>
+      <p class="modal-sub">You'll receive <strong id="payPoints">0</strong> points after verification.</p>
+
+      <div id="qrSection" class="qr-section">
+        <p class="label">Scan with any UPI app</p>
+        <div class="qr-wrap"><img id="qrImage" alt="UPI QR" /></div>
+        <p class="upi-id">UPI ID: <strong>9773819327@ptsbi</strong></p>
+      </div>
+
+      <div id="mobileSection" class="mobile-section">
+        <p>Opening your UPI app…</p>
+        <a id="upiLink" class="btn-primary" href="#">Open UPI App</a>
+      </div>
+
+      <div class="utr-form">
+        <label for="utrInput">Enter UTR / Transaction ID</label>
+        <input id="utrInput" type="text" placeholder="e.g. 4239XXXXXXXX" maxlength="30" />
+        <button id="verifyBtn" class="btn-primary">
+          <span class="btn-label">Verify & Add Points</span>
+          <span class="spinner" hidden></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success / Error popups -->
+  <div class="popup" id="successPopup">
+    <div class="popup-inner glass">
+      <div class="popup-icon success">✓</div>
+      <h3>Payment Verified!</h3>
+      <p id="successMsg">Points added to your wallet.</p>
+      <button class="btn-primary" data-close-popup>Awesome</button>
+    </div>
+  </div>
+
+  <div class="popup" id="errorPopup">
+    <div class="popup-inner glass">
+      <div class="popup-icon error">!</div>
+      <h3>Verification Failed</h3>
+      <p id="errorMsg">Something went wrong. Please try again.</p>
+      <button class="btn-primary" data-close-popup>Close</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
