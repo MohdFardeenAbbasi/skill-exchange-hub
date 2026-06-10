@@ -167,15 +167,22 @@ const AdminPayments = () => {
               <p className="text-muted-foreground text-center py-8">No pending requests</p>
             ) : (
               <div className="space-y-4">
-                {pending.map((req) => (
+                {pending.map((req: any) => (
                   <div key={req.id} className="p-4 rounded-xl border border-border bg-muted/30">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <p className="font-semibold text-foreground">₹{req.amount} → {req.points} Points</p>
-                        <p className="text-sm text-muted-foreground">UTR: <span className="font-mono text-foreground">{req.transaction_id}</span></p>
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="space-y-1 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-foreground">₹{req.amount} → {req.points} Points</p>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                            {(req.payment_method || "upi").replace("_"," ")}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Ref: <span className="font-mono text-foreground">{req.transaction_id}</span></p>
                         <p className="text-xs text-muted-foreground">
-                          {req.profile?.full_name || req.profile?.email || req.user_id.slice(0, 8) + "..."} • {new Date(req.created_at).toLocaleString()}
+                          {req.full_name || req.profile?.full_name || "—"} • {req.email || req.profile?.email || req.user_id.slice(0,8)+"..."} • {new Date(req.created_at).toLocaleString()}
                         </p>
+                        {req.bank_name && <p className="text-xs text-muted-foreground">Bank: {req.bank_name} • Cheque #{req.cheque_number} • {req.cheque_date}</p>}
+                        {req.payment_date && <p className="text-xs text-muted-foreground">Payment date: {req.payment_date}</p>}
                       </div>
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
                         <Input

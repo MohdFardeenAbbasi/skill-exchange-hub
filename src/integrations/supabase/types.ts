@@ -18,8 +18,16 @@ export type Database = {
         Row: {
           admin_notes: string | null
           amount: number
+          bank_name: string | null
+          cheque_date: string | null
+          cheque_number: string | null
           created_at: string
+          email: string | null
+          full_name: string | null
           id: string
+          package_id: string | null
+          payment_date: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
           points: number
           status: Database["public"]["Enums"]["payment_status"]
           transaction_id: string
@@ -29,8 +37,16 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           amount: number
+          bank_name?: string | null
+          cheque_date?: string | null
+          cheque_number?: string | null
           created_at?: string
+          email?: string | null
+          full_name?: string | null
           id?: string
+          package_id?: string | null
+          payment_date?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           points: number
           status?: Database["public"]["Enums"]["payment_status"]
           transaction_id: string
@@ -40,8 +56,16 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           amount?: number
+          bank_name?: string | null
+          cheque_date?: string | null
+          cheque_number?: string | null
           created_at?: string
+          email?: string | null
+          full_name?: string | null
           id?: string
+          package_id?: string | null
+          payment_date?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           points?: number
           status?: Database["public"]["Enums"]["payment_status"]
           transaction_id?: string
@@ -225,6 +249,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      payment_method: "bank_transfer" | "upi" | "cheque"
       payment_status: "pending" | "approved" | "rejected"
       video_category:
         | "education"
@@ -364,6 +389,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      payment_method: ["bank_transfer", "upi", "cheque"],
       payment_status: ["pending", "approved", "rejected"],
       video_category: [
         "education",
