@@ -18,6 +18,13 @@ import {
   Sparkles,
   Copy,
   ExternalLink,
+  Info,
+  ShieldCheck,
+  BadgeCheck,
+  Mail,
+  Phone,
+  QrCode,
+  Banknote,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -53,7 +60,7 @@ const buildQrUrl = (amount: number) => {
   const upi = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(
     PAYEE
   )}&am=${amount}&cu=INR&tn=${encodeURIComponent("SkillExchanger Wallet")}`;
-  return `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=12&data=${encodeURIComponent(
+  return `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=8&data=${encodeURIComponent(
     upi
   )}`;
 };
@@ -232,7 +239,7 @@ const BuyPoints = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-24 lg:pt-28 pb-16">
         <div className="container mx-auto px-4 max-w-7xl">
@@ -247,7 +254,7 @@ const BuyPoints = () => {
                 Recharge your <span className="gradient-text">Wallet</span>
               </h1>
               <p className="text-muted-foreground mt-2">
-                Pick a package, pay via UPI / Bank / Cheque, and submit for approval.
+                Pick a package, pay via your preferred method, and submit for approval.
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-4 px-6 flex items-center gap-4 shadow-sm">
@@ -299,10 +306,10 @@ const BuyPoints = () => {
             </div>
           </section>
 
-          {/* Two column layout */}
-          <div className="grid lg:grid-cols-5 gap-6">
-            {/* LEFT (methods + form) */}
-            <div className="lg:col-span-3 space-y-4">
+          {/* Main two-column layout */}
+          <div className="grid lg:grid-cols-10 gap-6 items-start">
+            {/* LEFT (70%) */}
+            <div className="lg:col-span-7 space-y-5">
               {/* Method cards */}
               <div className="grid sm:grid-cols-3 gap-3">
                 {methodCards.map((m) => {
@@ -336,8 +343,8 @@ const BuyPoints = () => {
                 })}
               </div>
 
-              {/* Method panel */}
-              <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-6">
+              {/* Method panel / Form */}
+              <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-6 shadow-sm">
                 {method === "bank_transfer" && (
                   <div className="mb-5 grid sm:grid-cols-2 gap-3 text-sm">
                     <InfoRow label="Account Holder" value={BANK.holder} />
@@ -494,41 +501,110 @@ const BuyPoints = () => {
               </div>
             </div>
 
-            {/* RIGHT (QR) */}
-            <aside className="lg:col-span-2">
-              <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-6 sticky top-24">
-                <h3 className="text-lg font-semibold text-foreground mb-1">Scan & Pay</h3>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Works with any UPI app — Paytm, GPay, PhonePe, BHIM.
-                </p>
-                <div className="relative rounded-2xl bg-white p-4 border border-border flex items-center justify-center">
-                  <img
-                    src={buildQrUrl(selected.amount)}
-                    alt={`UPI QR for ₹${selected.amount}`}
-                    className="w-full max-w-[280px] aspect-square"
-                  />
+            {/* RIGHT (30%) */}
+            <aside className="lg:col-span-3 space-y-4">
+              {/* Compact QR Card */}
+              <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <QrCode className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Scan & Pay</h3>
                 </div>
-                <div className="mt-4 p-3 rounded-xl bg-muted/40 border border-border">
-                  <p className="text-xs text-muted-foreground">UPI ID</p>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-mono font-semibold text-foreground text-sm">
-                      {UPI_ID}
+                <div className="flex items-center gap-4">
+                  <div className="shrink-0 rounded-xl bg-white p-2.5 border border-border shadow-sm">
+                    <img
+                      src={buildQrUrl(selected.amount)}
+                      alt={`UPI QR for ₹${selected.amount}`}
+                      className="w-28 h-28 object-contain"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Scan with any UPI app — Paytm, GPay, PhonePe, BHIM.
                     </p>
-                    <button
+                    <Button
                       type="button"
-                      onClick={() => copy(UPI_ID, "UPI ID")}
-                      className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                      variant="outline"
+                      size="sm"
+                      onClick={openPaytm}
+                      className="text-xs h-8"
                     >
-                      <Copy className="w-3 h-3" /> Copy
-                    </button>
+                      <ExternalLink className="w-3.5 h-3.5 mr-1" /> Open UPI App
+                    </Button>
                   </div>
                 </div>
-                <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                  You can directly pay to <strong className="text-foreground">{PAYEE}</strong>{" "}
-                  using the QR code, UPI ID, Bank Transfer, or Cheque. Submit your transaction
-                  details after payment. <strong className="text-foreground">Points will
-                  be credited after approval.</strong>
+              </div>
+
+              {/* UPI ID Card */}
+              <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <Banknote className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">UPI ID</h3>
+                </div>
+                <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-muted/40 border border-border">
+                  <p className="font-mono font-semibold text-foreground text-sm truncate">
+                    {UPI_ID}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copy(UPI_ID, "UPI ID")}
+                    className="h-8 px-2 text-xs"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Payment Approval Process */}
+              <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Payment Approval</h3>
+                </div>
+                <ol className="space-y-3 text-xs text-muted-foreground">
+                  <li className="flex gap-2.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">1</span>
+                    <span>Complete payment using <strong className="text-foreground">Bank Transfer, UPI, or Cheque</strong>.</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">2</span>
+                    <span>Submit your <strong className="text-foreground">UTR / Transaction Reference Number</strong>.</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">3</span>
+                    <span>Admin will <strong className="text-foreground">review your payment request</strong>.</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0">4</span>
+                    <span>After approval, points are <strong className="text-foreground">automatically credited</strong> to your wallet.</span>
+                  </li>
+                </ol>
+                <div className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <Clock className="w-3.5 h-3.5 text-green-600" />
+                  <span className="text-xs font-medium text-green-600">Avg. Approval: Within a few minutes</span>
+                </div>
+              </div>
+
+              {/* Support Information */}
+              <div className="rounded-2xl border border-border bg-card/60 backdrop-blur p-5 shadow-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <Info className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Need Help?</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                  Facing issues with your payment or points credit? Our support team is ready to assist you.
                 </p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Mail className="w-3.5 h-3.5 text-primary/70" />
+                    <span>support@skillexchanger.com</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Phone className="w-3.5 h-3.5 text-primary/70" />
+                    <span>+91 97738 19327</span>
+                  </div>
+                </div>
               </div>
             </aside>
           </div>
@@ -536,7 +612,7 @@ const BuyPoints = () => {
           {/* History */}
           <section className="mt-10">
             <h2 className="text-xl font-semibold text-foreground mb-4">Recharge History</h2>
-            <div className="rounded-2xl border border-border bg-card/60 backdrop-blur overflow-hidden">
+            <div className="rounded-2xl border border-border bg-card/60 backdrop-blur overflow-hidden shadow-sm">
               {!requests || requests.length === 0 ? (
                 <div className="p-8 text-center text-muted-foreground text-sm">
                   No payment requests yet.
